@@ -47,41 +47,41 @@ class OptionWindow(QtWidgets.QMainWindow):
         super().__init__()
         uic.loadUi('opwin.ui' , self)
        
-    
-def displayFrame():
-        #the logic of the scan should be implemented here        
-        global code , order_code , score
-        
-        ret, f = cap.read()  
-        org = f.copy()
-        gray = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
-        corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)    
-        
-        f , order_code = read_qrcode(cv2  , f)  
+class DFThread(QThread):
+    changePixmap = pyqtSignal(QImage)
+    showmarked = pyqtSignal(QImage)
+    def run(self):
+            while cap.isOpened():
+                global code , order_code , score
+                
+                ret, f = cap.read()  
+                org = f.copy()
+                gray = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
+                corners, ids, rejectedImgPoints = aruco.detectMarkers(gray, aruco_dict, parameters=parameters)    
+                
+                f , order_code = read_qrcode(cv2  , f)  
 
-        if len(corners) == 4:        
-             f , roi = detect_roi(cv2, org , f , corners , ids)
-        try:        
-            if order_code != None and code != order_code :
-                code = order_code
+                
+                try:        
+                    if order_code != None and code != order_code :
+                        code = order_code
 
-            cv2.putText(f , "sequence = {}".format(code) , (10,20) , cv2.FONT_HERSHEY_SIMPLEX , 0.5 , (255 , 255 ,0))   
-        
-            if code != None:            
-                score = preprocess(cv2 , roi , get_ordered_answers(code , answers , nb_questions) , nb_questions )   
-                cv2.putText(f , "score = {}".format(score) , (10,35) , cv2.FONT_HERSHEY_SIMPLEX , 0.5 , (255 , 255 ,0))
-                pass     
-        except Exception as E:        
-            pass  
+                    cv2.putText(f , "sequence = {}".format(code) , (10,20) , cv2.FONT_HERSHEY_SIMPLEX , 0.5 , (255 , 255 ,0))   
+                
+                    if code != None: 
+                        if len(corners) == 4:        
+                            f , roi = detect_roi(cv2, org , f , corners , ids)           
+                            score , marked = preprocess(cv2 , roi , get_ordered_answers(code , answers , nb_questions) , nb_questions )   
+                            cv2.putText(f , "score = {}".format(score) , (10,35) , cv2.FONT_HERSHEY_SIMPLEX , 0.5 , (255 , 255 ,0))
+                            roi = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB) 
+                            self.showmarked.emit(qimage2ndarray.array2qimage(roi))
+                            
+                except Exception as E:        
+                    pass  
 
-        f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)
-        image = qimage2ndarray.array2qimage(f)
-        #the process result is the image to show
-        ui.cam.setPixmap(QPixmap.fromImage(image))
-        ui.qrcode.setText(code)
-        ui.qrcode.update()
-        ui.score.setText(str(score))
-        ui.score.update()
+                f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)      
+                self.changePixmap.emit(qimage2ndarray.array2qimage(f))
+
 
 def change_source(source):
     global cap
@@ -115,7 +115,7 @@ class Ui_MainWindow(object):
         self.label_2.setGeometry(QtCore.QRect(830, 130, 47, 13))
         self.label_2.setObjectName("label_2")
         self.score = QtWidgets.QLabel(self.centralwidget)
-        self.score.setGeometry(QtCore.QRect(830, 150, 271, 16))
+        self.score.setGeometry(QtCore.QRect(830, 150, 320, 280))
         self.score.setObjectName("score")
         self.setipcam = QtWidgets.QPushButton(self.centralwidget)
         self.setipcam.setGeometry(QtCore.QRect(540, 650, 161, 23))
@@ -168,15 +168,22 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+
+        #set the cam feed
+        feedthread = DFThread(MainWindow)
+        feedthread.changePixmap.connect(lambda p: self.setimage(p))
+        feedthread.showmarked.connect(lambda p: self.showmarked(p))
+        feedthread.start()
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "quizz scanner 0.5"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "quizz scanner 0.7"))
         self.cam.setText(_translate("MainWindow", "TextLabel"))
         self.source_lab.setText(_translate("MainWindow", "Source"))
         self.label.setText(_translate("MainWindow", "sequence"))
         self.qrcode.setText(_translate("MainWindow", "TextLabel"))
         self.label_2.setText(_translate("MainWindow", "score"))
-        self.score.setText(_translate("MainWindow", "TextLabel"))
+        self.score.setText(_translate("MainWindow", ""))
         self.setipcam.setText(_translate("MainWindow", "ouvrir ip cam"))
         self.menuFichier.setTitle(_translate("MainWindow", "Fichier"))
         self.menuG_n_rer.setTitle(_translate("MainWindow", "Générer"))
@@ -193,11 +200,12 @@ class Ui_MainWindow(object):
         self.statusbar.showMessage("source video : {}".format(self.ipsource.text()))
     
     def openfileaction(self):
-        print('ok we got a signal')
+        print('ok we got a kill signal')           
         sys.exit(app.exec_())
     
     def msghelp(self):
-        QtWidgets.QMessageBox.about(self.centralwidget,"About quizz scanner","version 0.5 \ncontact: boujrida.mohamedoussama@gmail.com\n")
+        print(QThreadPool.globalInstance().maxThreadCount())
+        QtWidgets.QMessageBox.about(self.centralwidget,"About quizz scanner","version 0.7 \ncontact: boujrida.mohamedoussama@gmail.com\n")
     
     def quizz_gen(self):
         try:  
@@ -227,7 +235,21 @@ class Ui_MainWindow(object):
         global nb_questions , nbt        
         nbt = int(self.opWin.findChild(QtWidgets.QLineEdit , 'nbt').text()) 
         nb_questions = int(self.opWin.findChild(QtWidgets.QLineEdit , 'nbq').text()) 
-        self.opWin.close()     
+        self.opWin.close() 
+    
+    @pyqtSlot(QImage)
+    def setimage(self , f ):       
+        #the process result is the image to show
+        ui.cam.setPixmap(QPixmap.fromImage(f))
+        ui.qrcode.setText(code)
+        ui.qrcode.update()
+        
+
+    @pyqtSlot(QImage)
+    def showmarked(self , f ):       
+        #the process result is the image to show
+        ui.score.setGeometry(QtCore.QRect(830, 150, f.width(),f.height()))
+        ui.score.setPixmap(QPixmap.fromImage(f))    
         
 
 if __name__ == "__main__":        
@@ -236,9 +258,6 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()    
     ui.setupUi(MainWindow)
-    MainWindow.setFixedSize(950,720)    
-    timer = QTimer()    
-    timer.timeout.connect(displayFrame)
-    timer.start(60)
+    MainWindow.setFixedSize(1100,720)  
     MainWindow.show()   
     sys.exit(app.exec_())

@@ -49,7 +49,7 @@ def preprocess(cv2 , image , ANSWER_KEY , nb_questions):
             questionCnts.append(c)  
     if len(questionCnts)  == nb_questions * 4 :
         questionCnts = contours.sort_contours(questionCnts,method="top-to-bottom")[0]        
-        cv2.imshow('thresh' , thresh)
+        #cv2.imshow('thresh' , thresh)
         try:
             correct = 0                
             for (q, i) in enumerate(np.arange(0, len(questionCnts), 4)):
@@ -76,12 +76,12 @@ def preprocess(cv2 , image , ANSWER_KEY , nb_questions):
                     else:
                         for y in range(len(cnts)):
                             cv2.drawContours(image, [cnts[y]], -1, color, 3) 
-            cv2.imshow("marked" , image)
+            #cv2.imshow("marked" , image)
             
         except  Exception as E :
             print(E)
 
-    return correct
+    return correct , image
 
 
 def detect_roi(cv2 , org , f , corners , ids):
@@ -99,10 +99,7 @@ def detect_roi(cv2 , org , f , corners , ids):
             #print(E)
             pass      
      
-        try:
-            xs , ys  = result[3]
-            xf , yf  = result[1]
-          
+        try:          
             edges = np.array(result) 
             roi = perspective.four_point_transform(f,edges)     
             for point in result:
