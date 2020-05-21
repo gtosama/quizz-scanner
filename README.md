@@ -2,11 +2,11 @@
 quizz scanner is a simple opencv application that can generate unique(random) bubble quizz tests and evaluate them based on a qrcode holding the order of the questions making cheating a little bit harder for students(better than nothing , i suppose).
 # History
 Version 0.7 is here (21-05-2020)
--more responsive UI after threading the process of the cam feed
--adding the open excel action for the questions(the name has to be quizz.xlsx)
--quizz.docx is now generated in the same folder of the excel file
--added an lcd display widget for the score
--the marked sheet is shown in the window
+- more responsive UI after threading the process of the cam feed
+- adding the open excel action for the questions(the name has to be quizz.xlsx)
+- quizz.docx is now generated in the same folder of the excel file
+- added an lcd display widget for the score
+- the marked sheet is shown in the window
 
 # Installation
 Use the package manager pip to install the dependencies
