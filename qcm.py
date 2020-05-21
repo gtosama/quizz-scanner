@@ -6,7 +6,6 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets , uic
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -14,7 +13,9 @@ from PyQt5.QtGui import *
 import cv2 
 from cv2 import aruco
 import qimage2ndarray # for a memory leak,see gist
-import sys 
+import sys
+import os 
+from pathlib import Path
 
 
 import time
@@ -37,10 +38,12 @@ score=None
 aruco_dict = aruco.Dictionary_get(aruco.DICT_4X4_250)
 parameters =  aruco.DetectorParameters_create()
 answers = load_answers()
-
-class quizzthread(QRunnable):
-    def run(self):
-        make_quizz_doc(nb_questions , nbt)
+quizzpath = 'quizz.xlsx'
+class quizzthread(QThread):
+    done = pyqtSignal(int)
+    def run(self):        
+        make_quizz_doc(nb_questions , nbt , quizzpath)
+        self.done.emit(0)
 
 class OptionWindow(QtWidgets.QMainWindow):
     def __init__(self):
@@ -112,10 +115,10 @@ class Ui_MainWindow(object):
         self.qrcode.setGeometry(QtCore.QRect(830, 40, 281, 16))
         self.qrcode.setObjectName("qrcode")
         self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(830, 130, 47, 13))
+        self.label_2.setGeometry(QtCore.QRect(830, 80, 47, 13))
         self.label_2.setObjectName("label_2")
         self.score = QtWidgets.QLabel(self.centralwidget)
-        self.score.setGeometry(QtCore.QRect(830, 150, 320, 280))
+        self.score.setGeometry(QtCore.QRect(830, 80, 320, 280))
         self.score.setObjectName("score")
         self.setipcam = QtWidgets.QPushButton(self.centralwidget)
         self.setipcam.setGeometry(QtCore.QRect(540, 650, 161, 23))
@@ -130,8 +133,12 @@ class Ui_MainWindow(object):
         self.menuFichier.setObjectName("menuFichier")
         self.quitter = QtWidgets.QAction(MainWindow)
         self.quitter.setObjectName("quitter")
-        self.menuFichier.addAction(self.quitter)
-        self.quitter.triggered.connect(self.openfileaction)
+        self.excel = QtWidgets.QAction(MainWindow)
+        self.excel.setObjectName("excel")
+        self.menuFichier.addAction(self.excel)
+        self.menuFichier.addAction(self.quitter)        
+        self.excel.triggered.connect(self.openfileaction)
+        self.quitter.triggered.connect(self.quit)
         #menu configuration
         self.menuconfig = QtWidgets.QMenu(self.menubar)
         self.menuconfig.setObjectName("menuconfig")
@@ -165,15 +172,21 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuG_n_rer.menuAction())
         self.menubar.addAction(self.menuconfig.menuAction())
         self.menubar.addAction(self.menuabout.menuAction())
+        #lcd score display
+        self.lcd = QtWidgets.QLCDNumber(self.centralwidget)
+        self.lcd.setObjectName("lcd")
+        self.lcd.setGeometry(QtCore.QRect(830, 580, 200, 80))
         self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        #add visual widgets before this line
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         #set the cam feed
         feedthread = DFThread(MainWindow)
         feedthread.changePixmap.connect(lambda p: self.setimage(p))
         feedthread.showmarked.connect(lambda p: self.showmarked(p))
         feedthread.start()
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -190,36 +203,49 @@ class Ui_MainWindow(object):
         self.menuconfig.setTitle(_translate("MainWindow", "options"))
         self.menuabout.setTitle(_translate("MainWindow", "about"))
         self.actionfichier_qcm.setText(_translate("MainWindow", "fichier qcm"))
-        self.quitter.setText(_translate("MainWindow", "Quitter"))
+        self.quitter.setText(_translate("MainWindow", "Quitter"))        
+        self.excel.setText(_translate("MainWindow", "ouvrir le fichier excel"))
         self.quitter.setShortcut(_translate("MainWindow", "Esc"))        
         self.configurer.setText(_translate("MainWindow", "configurer"))
         self.configurer.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.help.setText(_translate("MainWindow", "help"))
+        self.lcd.display(0)
     def set_ip_cam(self):        
         change_source(self.ipsource.text())
         self.statusbar.showMessage("source video : {}".format(self.ipsource.text()))
     
     def openfileaction(self):
-        print('ok we got a kill signal')           
-        sys.exit(app.exec_())
+        global quizzpath 
+        home_dir = str(Path.home())
+        fil = "xlsx(*.xlsx)"
+        fname = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, 'Open file', home_dir,fil) 
+        quizzpath = os.path.dirname(fname[0])        
+        
     
     def msghelp(self):
         print(QThreadPool.globalInstance().maxThreadCount())
         QtWidgets.QMessageBox.about(self.centralwidget,"About quizz scanner","version 0.7 \ncontact: boujrida.mohamedoussama@gmail.com\n")
     
+    
     def quizz_gen(self):
         try:  
             buttonReply = QtWidgets.QMessageBox.question(self.centralwidget,'Générer ', "Générer "+str(nbt)+" tests avec "+ str(nb_questions) +" questions?(changer les valeurs dans le menu options)", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)                    
             if buttonReply == QtWidgets.QMessageBox.Yes:
-                Qmaker = quizzthread()
-                QThreadPool.globalInstance().start(Qmaker)
-                self.statusbar.showMessage("fichier prêt dans 5 secondes")
+                Qmaker = quizzthread(MainWindow)
+                Qmaker.done.connect(lambda p: self.quizzdone(p))
+                Qmaker.start()
+                self.statusbar.showMessage("Génération en cours ...")
             else:
                 pass
             
         except Exception as e:
             print(e)
             self.statusbar.showMessage(str(e))
+
+
+    @pyqtSlot(int)
+    def quizzdone(self , x):
+        self.statusbar.showMessage("fichier quizz.docx prêt ")
 
     def configaction(self):
         global nb_questions
@@ -249,7 +275,11 @@ class Ui_MainWindow(object):
     def showmarked(self , f ):       
         #the process result is the image to show
         ui.score.setGeometry(QtCore.QRect(830, 150, f.width(),f.height()))
-        ui.score.setPixmap(QPixmap.fromImage(f))    
+        ui.score.setPixmap(QPixmap.fromImage(f)) 
+        ui.lcd.display(score)
+
+    def quit(self):
+        sys.exit(app.exec_())  
         
 
 if __name__ == "__main__":        
@@ -258,6 +288,6 @@ if __name__ == "__main__":
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()    
     ui.setupUi(MainWindow)
-    MainWindow.setFixedSize(1100,720)  
+    MainWindow.setFixedSize(1150,720)  
     MainWindow.show()   
     sys.exit(app.exec_())

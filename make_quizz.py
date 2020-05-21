@@ -8,9 +8,9 @@ import openpyxl
 import pyqrcode
 
 
-def make_quizz_doc(nbq , nbt):
+def make_quizz_doc(nbq , nbt , quizzpath):
 
-    book = openpyxl.load_workbook('quizz.xlsx')
+    book = openpyxl.load_workbook(quizzpath+'/quizz.xlsx')
     sheet = book.active
     right_answers = {x-2:sheet.cell(row=x,column=6).value for x in range(2,nbq+2)} 
 
@@ -18,7 +18,7 @@ def make_quizz_doc(nbq , nbt):
     style = document.styles['Normal']
     font = style.font
     font.name = 'Calibri'
-    font.size = Pt(14)
+    font.size = Pt(12)
     sections = document.sections
     for section in sections:
         section.top_margin = Cm(1)
@@ -68,5 +68,5 @@ def make_quizz_doc(nbq , nbt):
         document.add_paragraph().add_run().add_break(WD_BREAK.PAGE)    
 
 
-    document.save('demo.docx')
+    document.save(quizzpath+'/quizz.docx')
    
