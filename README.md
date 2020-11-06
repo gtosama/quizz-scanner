@@ -36,8 +36,8 @@ change the zero index in line 40 for other cameras(self.cap = cv2.VideoCapture(0
 ![phase 1 order detection](qrcode.png)
 
 now , show the bubble sheet and the work is done !!!
-PS:use define the url from IPcam to use your phone as camera
 ![phase 2 evaluation](ipcam.jpg)
+PS:use define the url from IPcam to use your phone as camera
 
 the number of tests and the questions for each test can be set in the options menu.
 as you can tell from the number of the version , the work is still in but i thought it's time to share it :shipit: 
