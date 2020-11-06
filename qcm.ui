@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1080</width>
-    <height>724</height>
+    <width>1001</width>
+    <height>722</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -80,7 +80,7 @@
     <property name="geometry">
      <rect>
       <x>830</x>
-      <y>130</y>
+      <y>60</y>
       <width>47</width>
       <height>13</height>
      </rect>
@@ -93,7 +93,7 @@
     <property name="geometry">
      <rect>
       <x>830</x>
-      <y>150</y>
+      <y>80</y>
       <width>271</width>
       <height>16</height>
      </rect>
@@ -103,6 +103,9 @@
     </property>
    </widget>
    <widget class="QPushButton" name="setipcam">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>540</x>
@@ -115,13 +118,23 @@
      <string>ouvrir ip cam</string>
     </property>
    </widget>
+   <widget class="QLCDNumber" name="lcdscore">
+    <property name="geometry">
+     <rect>
+      <x>830</x>
+      <y>560</y>
+      <width>141</width>
+      <height>111</height>
+     </rect>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1080</width>
+     <width>1001</width>
      <height>21</height>
     </rect>
    </property>
@@ -129,20 +142,65 @@
     <property name="title">
      <string>Fichier</string>
     </property>
+    <addaction name="separator"/>
+    <addaction name="actionexcel"/>
+    <addaction name="actionquitter"/>
    </widget>
    <widget class="QMenu" name="menuG_n_rer">
     <property name="title">
      <string>Générer</string>
     </property>
-    <addaction name="actionfichier_qcm"/>
+    <addaction name="actionqcm"/>
+   </widget>
+   <widget class="QMenu" name="menuoptions">
+    <property name="title">
+     <string>options</string>
+    </property>
+    <addaction name="actionconfigurer"/>
+   </widget>
+   <widget class="QMenu" name="menuabout">
+    <property name="title">
+     <string>about</string>
+    </property>
+    <addaction name="actionhelp"/>
    </widget>
    <addaction name="menuFichier"/>
    <addaction name="menuG_n_rer"/>
+   <addaction name="menuoptions"/>
+   <addaction name="menuabout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionfichier_qcm">
+  <action name="actionqcm">
    <property name="text">
     <string>fichier qcm</string>
+   </property>
+  </action>
+  <action name="excel">
+   <property name="text">
+    <string>ouvrir le fichier excel</string>
+   </property>
+   <property name="statusTip">
+    <string/>
+   </property>
+  </action>
+  <action name="actionexcel">
+   <property name="text">
+    <string>ouvrir le fichier excel</string>
+   </property>
+  </action>
+  <action name="actionquitter">
+   <property name="text">
+    <string>quitter</string>
+   </property>
+  </action>
+  <action name="actionconfigurer">
+   <property name="text">
+    <string>configurer</string>
+   </property>
+  </action>
+  <action name="actionhelp">
+   <property name="text">
+    <string>help</string>
    </property>
   </action>
  </widget>
