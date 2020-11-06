@@ -30,9 +30,13 @@ use quizz.docx to generate the quizz.
 use sheet.docx as the response sheet .
 
 after launching the app, show the qrcode to initialize the evaluation (qrcode contains the sequence matching with the questions in the excel file needed after the shuffle).
+
+the application uses the first cam in your pc
+change the zero index in line 40 for other cameras(self.cap = cv2.VideoCapture(0))
 ![phase 1 order detection](qrcode.png)
 
 now , show the bubble sheet and the work is done !!!
+PS:use define the url from IPcam to use your phone as camera
 ![phase 2 evaluation](ipcam.jpg)
 
 the number of tests and the questions for each test can be set in the options menu.
