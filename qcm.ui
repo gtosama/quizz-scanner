@@ -157,17 +157,11 @@
      <string>options</string>
     </property>
     <addaction name="actionconfigurer"/>
-   </widget>
-   <widget class="QMenu" name="menuabout">
-    <property name="title">
-     <string>about</string>
-    </property>
-    <addaction name="actionhelp"/>
+    <addaction name="actioneditqp"/>
    </widget>
    <addaction name="menuFichier"/>
    <addaction name="menuG_n_rer"/>
    <addaction name="menuoptions"/>
-   <addaction name="menuabout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionqcm">
@@ -201,6 +195,11 @@
   <action name="actionhelp">
    <property name="text">
     <string>help</string>
+   </property>
+  </action>
+  <action name="actioneditqp">
+   <property name="text">
+    <string>editer les questions/propositions</string>
    </property>
   </action>
  </widget>

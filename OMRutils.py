@@ -37,7 +37,7 @@ def read_qrcode(cv2, image):
                 cv2.putText(image, code, (x-200, y + 95), cv2.FONT_HERSHEY_SIMPLEX,0.5, (0, 0, 255), 2)
     return image , code
 
-def preprocess(cv2 , image , gray , ANSWER_KEY , nb_questions):
+def preprocess(cv2 , image , gray , ANSWER_KEY , nb_questions , nb_prop=4):
     questionCnts = []  
          
     font = cv2.FONT_HERSHEY_SIMPLEX     
@@ -59,15 +59,15 @@ def preprocess(cv2 , image , gray , ANSWER_KEY , nb_questions):
         #define size of detected bubbles here
         if w >= 3 and h >= 3 and ar >= 0.9 and ar <= 1.1:
             questionCnts.append(c)  
-    if len(questionCnts)  == nb_questions * 4 :
+    if len(questionCnts)  == nb_questions * nb_prop :
         correct = 0 
         questionCnts = contours.sort_contours(questionCnts,method="top-to-bottom")[0]        
         #cv2.imshow('thresh' , thresh)
         print(len(questionCnts))
         try:
                         
-            for (q, i) in enumerate(np.arange(0, len(questionCnts), 4)):
-                cnts = contours.sort_contours(questionCnts[i:i + 4 ])[0]
+            for (q, i) in enumerate(np.arange(0, len(questionCnts), nb_prop)):
+                cnts = contours.sort_contours(questionCnts[i:i + nb_prop ])[0]
                 bubbled = []
             
                 for (j, c) in enumerate(cnts):                
@@ -80,7 +80,7 @@ def preprocess(cv2 , image , gray , ANSWER_KEY , nb_questions):
                         bubbled.append((total , j))
                 color = (0, 0, 255)
                 #print(bubbled)        
-                k = ANSWER_KEY[q]
+                k = ANSWER_KEY[q]-1
                 if (bubbled !=None):
                     #if only one bubble is chosen
                     if len(bubbled) == 1:                

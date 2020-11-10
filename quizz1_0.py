@@ -12,10 +12,11 @@ from PyQt5.QtGui import *
 import cv2 
 import qimage2ndarray # for a memory leak,see gist
 
-
-
 from OMRutils import shadow_remover , load_answers , read_qrcode , get_ordered_answers , preprocess , detect_roi , detect_roi2 
 from make_quizz import make_quizz_doc
+
+import pandas as pd
+from excelTableModel import CustomTableModel
 
 
 
@@ -25,8 +26,9 @@ order_code = None
 code = None
 score=0
 
-answers = load_answers()
 quizzpath = str(Path().absolute())
+
+answers = load_answers()
 print(quizzpath)
 
 
@@ -78,7 +80,7 @@ class DFThread(QThread):
                             self.showmarked.emit(qimage2ndarray.array2qimage(roi))
                             
                 except Exception as E:  
-                    print(E)      
+                    #print(E)      
                     pass  
 
                 f = cv2.cvtColor(f, cv2.COLOR_BGR2RGB)      
@@ -93,10 +95,27 @@ class quizzthread(QThread):
         except Exception as e:
             pass
 
+class saveexcelthread(QThread):
+    done = pyqtSignal(int)
+    global quizzpath
+    def run(self):        
+        try:
+            window.excel_data.to_excel(quizzpath+'/quizz.xlsx' , index=False)
+            self.done.emit(0)
+        except Exception as e:
+            print(e)
+            pass
+
 class OptionWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('opwin.ui' , self)
+
+class EditQPWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        uic.loadUi('exceledit.ui' , self)
+
 
 class MainWindow(QtWidgets.QMainWindow):
     
@@ -138,6 +157,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.config = MainWindow.findChild(QtWidgets.QAction ,'actionconfigurer')
         self.config.triggered.connect(self.configaction)
         self.config.setShortcut(_translate("window",'Ctrl+O')) 
+
+        self.editqp = MainWindow.findChild(QtWidgets.QAction ,'actioneditqp')
+        self.editqp.triggered.connect(self.editqpaction)
+        self.editqp.setShortcut(_translate("window",'Ctrl+Q')) 
+        
         
 
         self.feedthread = DFThread(window)
@@ -174,7 +198,8 @@ class MainWindow(QtWidgets.QMainWindow):
         home_dir = str(Path().absolute())
         fil = "xlsx(*.xlsx)"
         fname = QtWidgets.QFileDialog.getOpenFileName(self.centralwidget, 'Open file', home_dir,fil) 
-        quizzpath = os.path.dirname(fname[0])      
+        quizzpath = os.path.dirname(fname[0])  
+        print(quizzpath)    
 
     def quit(self):   
         self.feedthread.cap.release()
@@ -216,8 +241,49 @@ class MainWindow(QtWidgets.QMainWindow):
         nb_questions = int(self.opWin.findChild(QtWidgets.QLineEdit , 'nbq').text()) 
         self.opWin.close() 
 
+    def editqpaction(self):
+        self.qpwin = EditQPWindow()
+        self.tableview = self.qpwin.findChild(QtWidgets.QTableView ,'tableView')
+        self.qpwin.setWindowTitle("Quick Excel Edit")
+        self.tableview.setWordWrap(True)
+        self.tableview.setTextElideMode(Qt.ElideMiddle)
+        self.tableview.resizeRowsToContents()
+        df = pd.read_excel(quizzpath + "/quizz.xlsx")
+        df.set_index('questions')
+        self.excel_data = df
+        model = CustomTableModel(df)       
+        self.tableview.setModel(model)
 
-     
+        self.saveexcel = self.qpwin.findChild(QtWidgets.QPushButton , 'save')
+        self.saveexcel.clicked.connect(self.saveaction)
+        self.qpwin.show()
+
+    def saveaction(self): 
+        try:  
+            buttonReply = QtWidgets.QMessageBox.question(self.centralwidget,'excel quizz  ', "êtes vous sure?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)                    
+            if buttonReply == QtWidgets.QMessageBox.Yes:
+                Qsaver = saveexcelthread(window)
+                Qsaver.done.connect(lambda p: self.savedone(p))
+                Qsaver.start()
+                self.statusbar.showMessage("modification du fichier excel en cours ...")
+                self.qpwin.close()
+                
+            else:
+                pass
+            
+        except Exception as e:
+            print(e)
+            self.statusbar.showMessage(str(e))
+    
+    @pyqtSlot(int)
+    def savedone(self , x):
+        self.statusbar.showMessage("fichier excel modifié ")
+
+    
+    
+        
+
+    
 if __name__ == "__main__": 
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()

@@ -1,6 +1,9 @@
 # Description
 quizz scanner is a simple opencv application that can generate unique(random) bubble quizz tests and evaluate them based on a qrcode holding the order of the questions making cheating a little bit harder for students(better than nothing , i suppose).
 # History
+version 1.0 is pfficially in the blocks!!!
+- improved question and bubble sheet generation
+- ability to edit the excel file containing the questions in the app
 version 0.9 is here (6-11-2020)
 - improved the detection algorithm (cv2.resize() help a lot) making the distance , camera quality less relevant(this is huge)
 
@@ -15,7 +18,7 @@ Version 0.7 is here (21-05-2020)
 Use the package manager pip to install the dependencies
 
 ```bash
-pip install numpy opencv-contrib-python openpyxl pyzbar imutils PyQt5 qimage2ndarray python-docx pyqrcode
+pip install numpy opencv-contrib-python openpyxl pyzbar imutils PyQt5 qimage2ndarray python-docx pyqrcode pandas xlrd 
 ```
 
 pyzbar requires  [Visual C++ Redistributable Packages for Visual Studio 2013](https://www.microsoft.com/en-US/download/details.aspx?id=40784) to work
