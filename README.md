@@ -18,7 +18,7 @@ Version 0.7 is here (21-05-2020)
 Use the package manager pip to install the dependencies
 
 ```bash
-pip install numpy opencv-contrib-python openpyxl pyzbar imutils PyQt5 qimage2ndarray python-docx pyqrcode pandas xlrd 
+pip install numpy opencv-contrib-python pyzbar imutils PyQt5 qimage2ndarray python-docx pyqrcode pandas xlrd 
 ```
 
 pyzbar requires  [Visual C++ Redistributable Packages for Visual Studio 2013](https://www.microsoft.com/en-US/download/details.aspx?id=40784) to work

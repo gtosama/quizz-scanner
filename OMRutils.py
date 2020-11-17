@@ -2,7 +2,8 @@ from imutils import contours , grab_contours , perspective
 from imutils.perspective import four_point_transform
 import numpy as np
 from pyzbar import pyzbar
-import openpyxl
+
+import pandas as pd
 
 def shadow_remover(cv2 ,img):
     grayscale_plane = cv2.split(img)[0]
@@ -12,10 +13,10 @@ def shadow_remover(cv2 ,img):
     normalized_img = cv2.normalize(diff_img, None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8UC1)
     return normalized_img
 
-def load_answers():
-    book = openpyxl.load_workbook('quizz.xlsx')
-    sheet = book.active
-    ANSWERS={x-2:sheet.cell(row=x,column=6).value for x in range(2,12)}     
+def load_answers(quizzpath): 
+    df = pd.read_excel(quizzpath + "/quizz.xlsx")
+    print(df["correct"])
+    ANSWERS={x:df["correct"][x] for x in range(0,10)}    
     return ANSWERS
 
 def get_ordered_answers(code,right_answers,nb_questions):
@@ -75,7 +76,7 @@ def preprocess(cv2 , image , gray , ANSWER_KEY , nb_questions , nb_prop=4):
                     cv2.drawContours(mask, [c], -1, 255, -1)
                     mask = cv2.bitwise_and(thresh, thresh, mask=mask)
                     total = cv2.countNonZero(mask) 
-                    print(total)               
+                    #print(total)               
                     if total > 600:                      
                         bubbled.append((total , j))
                 color = (0, 0, 255)

@@ -28,7 +28,7 @@ score=0
 
 quizzpath = str(Path().absolute())
 
-answers = load_answers()
+answers = load_answers(quizzpath)
 print(quizzpath)
 
 
