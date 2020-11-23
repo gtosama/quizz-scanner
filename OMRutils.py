@@ -14,8 +14,7 @@ def shadow_remover(cv2 ,img):
     return normalized_img
 
 def load_answers(quizzpath): 
-    df = pd.read_excel(quizzpath + "/quizz.xlsx")
-    print(df["correct"])
+    df = pd.read_excel(quizzpath + "/quizz.xlsx")    
     ANSWERS={x:df["correct"][x] for x in range(0,10)}    
     return ANSWERS
 

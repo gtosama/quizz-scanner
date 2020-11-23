@@ -2,19 +2,20 @@ from docx import Document , section
 from docx.shared import Pt , Cm
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT , WD_BREAK 
 from docx.enum.section import WD_SECTION
-from fpdf import FPDF
 
-from random import shuffle
 
-import openpyxl
+from random import shuffle 
+
+import pandas as pd
 import pyqrcode
 
 
 def make_quizz_doc(nbq , nbt , quizzpath):
     """makes the .doc    
     """
-    book = openpyxl.load_workbook(quizzpath+'/quizz.xlsx')
-    sheet = book.active    
+    
+    df = pd.read_excel(quizzpath + "/quizz.xlsx")  
+    
     document = Document()
     style = document.styles['Normal']
     font = style.font
@@ -29,8 +30,9 @@ def make_quizz_doc(nbq , nbt , quizzpath):
 
     questions = []
     for i in range(2,nbq+2):
-        question = i-1 , sheet.cell(row=i,column=1).value , [sheet.cell(row=i,column=j).value for j in range(2,6) ] 
+        question = i-1 , df["questions"][i-2], [df[k][i-2] for k in ["prop1","prop2","prop3","prop4"]] 
         questions.append(question)
+
      
     for i in range(1,nbt+1):
         code = ''
@@ -59,7 +61,7 @@ def make_quizz_doc(nbq , nbt , quizzpath):
             table.cell(i,0).text = qtext 
             cell = table.cell(i,0)
             test= [str(i+1)+")"+props[i] for i in range(0,len(props))]
-            print(test)
+            
             ptext = '\n'.join(test)                    
             table.cell(i,1).text = ptext 
             
@@ -76,11 +78,7 @@ def make_bubble_sheet(nb,first,second=None):
     document = Document("little sheet.docx")
     qrcodesection = document.sections[-1]
     
-    #table = document.add_table(rows=1, cols=2)
-    #cell = table.cell(0,0)
-    #p = cell.paragraphs[0]
-    #p.alignment=WD_PARAGRAPH_ALIGNMENT.CENTER
-    #p.add_run().add_picture('code.png',width=Cm(4.5))
+
     p = document.add_paragraph()
     p.alignment=WD_PARAGRAPH_ALIGNMENT.CENTER
     p.add_run().add_picture(first,width=Cm(4.5))
@@ -91,5 +89,5 @@ def make_bubble_sheet(nb,first,second=None):
        
     
 
-#make_quizz_doc(10 ,2 ,"E:/work/python/quizz scanner" )
-make_bubble_sheet(30)
+make_quizz_doc(10 ,10,"E:/work/python/quizz scanner" )
+#make_bubble_sheet(30)

@@ -36,13 +36,9 @@ print(quizzpath)
 class DFThread(QThread):
     changePixmap = pyqtSignal(QImage)
     showmarked = pyqtSignal(QImage)
-    def run(self):
-            
+    def run(self):            
             try:
-                self.cap = cv2.VideoCapture(0)
-                self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 800)
-                self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 600)
-                
+                self.cap = cv2.VideoCapture(0)               
             except Exception as E:
                 pass
             
@@ -50,7 +46,7 @@ class DFThread(QThread):
                 global code , order_code , score
                 
                 ret, f = self.cap.read()  
-                org = f.copy()
+                f = cv2.resize(f,(800,600) , interpolation=cv2.INTER_AREA)
                 gray = cv2.cvtColor(f, cv2.COLOR_BGR2GRAY)
                 gray = shadow_remover(cv2 , gray)                
                 blurred = cv2.GaussianBlur(gray, (5, 5), 0)
@@ -73,7 +69,7 @@ class DFThread(QThread):
                     
                     if code != None:               
                              
-                            score , marked = preprocess(cv2 , roi , roi_gray , get_ordered_answers(code , answers , nb_questions) , nb_questions )   
+                            score , _ = preprocess(cv2 , roi , roi_gray , get_ordered_answers(code , answers , nb_questions) , nb_questions )   
                             cv2.putText(f , "score = {}".format(score) , (10,35) , cv2.FONT_HERSHEY_SIMPLEX , 0.5 , (255 , 255 ,0))
                             roi = cv2.cvtColor(roi, cv2.COLOR_BGR2RGB)
                             roi = cv2.resize(roi , (150 , 354) , interpolation=cv2.INTER_AREA) 
@@ -89,15 +85,13 @@ class DFThread(QThread):
 class quizzthread(QThread):
     done = pyqtSignal(int)
     def run(self):        
-        try:
-            make_quizz_doc(nb_questions , nbt , quizzpath)
+                  
+            make_quizz_doc(nb_questions , nbt , quizzpath)            
             self.done.emit(0)
-        except Exception as e:
-            pass
+        
 
 class saveexcelthread(QThread):
-    done = pyqtSignal(int)
-    global quizzpath
+    done = pyqtSignal(int)    
     def run(self):        
         try:
             window.excel_data.to_excel(quizzpath+'/quizz.xlsx' , index=False)
@@ -213,9 +207,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 Qmaker = quizzthread(window)
                 Qmaker.done.connect(lambda p: self.quizzdone(p))
                 Qmaker.start()
+                
                 self.statusbar.showMessage("Génération en cours ...")
-            else:
-                pass
+            
             
         except Exception as e:
             print(e)
