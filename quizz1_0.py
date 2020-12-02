@@ -37,10 +37,10 @@ class DFThread(QThread):
     changePixmap = pyqtSignal(QImage)
     showmarked = pyqtSignal(QImage)
     def run(self):            
-            try:
-                self.cap = cv2.VideoCapture(0)               
-            except Exception as E:
-                pass
+            try:                
+                self.cap = cv2.VideoCapture(0)                          
+            except Exception as E:                
+                print(E)
             
             while self.cap.isOpened():
                 global code , order_code , score
@@ -121,7 +121,7 @@ class MainWindow(QtWidgets.QMainWindow):
         _translate = QtCore.QCoreApplication.translate
 
         MainWindow.setWindowTitle(_translate("window", "quizz scanner 1.0"))
-        
+        MainWindow.setFixedSize(980,720)
         #labels
         self.cam = MainWindow.findChild(QtWidgets.QLabel ,'cam')
         self.cam.setText("\t\t initialisation du périphérique video en cours ...")
@@ -281,6 +281,9 @@ class MainWindow(QtWidgets.QMainWindow):
 if __name__ == "__main__": 
     app = QtWidgets.QApplication(sys.argv)
     window = MainWindow()
+    #buttonReply = QtWidgets.QMessageBox.question(window.centralwidget,'menu camera', "avez vous une camera?", QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)                    
+    #if buttonReply == QtWidgets.QMessageBox.Yes:
+        
     window.setupUi(window)
     window.show()
     app.exec_()
